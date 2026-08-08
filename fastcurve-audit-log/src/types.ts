@@ -10,9 +10,8 @@ export interface AuditEvent {
 	status: AuditStatus;
 	actorId?: string;
 	actorEmail?: string;
-	actorIp?: string;
-	actorIpv4?: string;
-	actorIpv6?: string;
+	/** SHA-256 fingerprint of client network identifiers; raw IPs are not stored. */
+	actorSourceKey?: string;
 	resourceType?: string;
 	resourceId?: string;
 	collection?: string;

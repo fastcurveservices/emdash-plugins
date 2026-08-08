@@ -41,6 +41,5 @@ export async function recordVisit(ctx: PluginContext, input: VisitInput): Promis
 		timestamp,
 		visitorKey: input.visitorKey,
 		path: input.path,
-		referer: input.referer,
 	});
 }

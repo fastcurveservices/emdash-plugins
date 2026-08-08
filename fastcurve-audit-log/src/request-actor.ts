@@ -5,24 +5,15 @@ export interface AuditRequestActor {
 }
 
 const ACTOR_TTL_MS = 15_000;
-const STORE_KEY = Symbol.for("fastcurve-audit-log:request-actor");
 
 interface ActorStore {
 	lastMutationActor?: { actor: AuditRequestActor; at: number };
 	actorsByContentKey: Map<string, { actor: AuditRequestActor; at: number }>;
 }
 
-function getStore(): ActorStore {
-	const globalStore = globalThis as typeof globalThis & {
-		[STORE_KEY]?: ActorStore;
-	};
-	if (!globalStore[STORE_KEY]) {
-		globalStore[STORE_KEY] = {
-			actorsByContentKey: new Map(),
-		};
-	}
-	return globalStore[STORE_KEY];
-}
+const actorStore: ActorStore = {
+	actorsByContentKey: new Map(),
+};
 
 function isFresh(at: number): boolean {
 	return Date.now() - at <= ACTOR_TTL_MS;
@@ -43,7 +34,7 @@ export function actorFromUser(user: {
 
 export function stashMutationActor(actor: AuditRequestActor | undefined): void {
 	if (!actor?.id && !actor?.email) return;
-	getStore().lastMutationActor = { actor, at: Date.now() };
+	actorStore.lastMutationActor = { actor, at: Date.now() };
 }
 
 export function rememberContentActor(
@@ -52,29 +43,27 @@ export function rememberContentActor(
 	actor: AuditRequestActor | undefined,
 ): void {
 	if (!actor?.id && !actor?.email) return;
-	getStore().actorsByContentKey.set(`${collection}:${contentKey}`, { actor, at: Date.now() });
+	actorStore.actorsByContentKey.set(`${collection}:${contentKey}`, { actor, at: Date.now() });
 }
 
 export function getAuditRequestActor(content?: {
 	collection?: string;
 	contentKey?: string;
 }): AuditRequestActor | undefined {
-	const store = getStore();
-
 	if (content?.collection && content.contentKey) {
-		const keyed = store.actorsByContentKey.get(`${content.collection}:${content.contentKey}`);
+		const keyed = actorStore.actorsByContentKey.get(`${content.collection}:${content.contentKey}`);
 		if (keyed && isFresh(keyed.at)) {
 			return keyed.actor;
 		}
 	}
 
-	if (store.lastMutationActor && isFresh(store.lastMutationActor.at)) {
-		return store.lastMutationActor.actor;
+	if (actorStore.lastMutationActor && isFresh(actorStore.lastMutationActor.at)) {
+		return actorStore.lastMutationActor.actor;
 	}
 
 	return undefined;
 }
 
 export function clearContentActor(collection: string, contentKey: string): void {
-	getStore().actorsByContentKey.delete(`${collection}:${contentKey}`);
+	actorStore.actorsByContentKey.delete(`${collection}:${contentKey}`);
 }

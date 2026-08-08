@@ -17,6 +17,11 @@ import {
 	explainPublishForbidden,
 } from "./marketplace-access.mjs";
 import { readMarketplaceCredential } from "./marketplace-auth.mjs";
+import {
+	buildListingMetadata,
+	toCreateListingPayload,
+	toPatchListingPayload,
+} from "./marketplace-listing.mjs";
 import { toMarketplaceCapabilities } from "./marketplace-manifest.mjs";
 
 const registryUrl = process.env.EMDASH_REGISTRY ?? "https://emdashcms.org";
@@ -34,16 +39,10 @@ try {
 
 const registryOrigin = new URL(registryUrl).origin;
 const authHeaders = { Authorization: `Bearer ${token}`, Origin: registryOrigin };
-
-function listingShortDescription() {
-	const raw = (pkg.shortDescription ?? pkg.description)?.trim();
-	if (!raw) return undefined;
-	return raw.length > 160 ? `${raw.slice(0, 157)}...` : raw;
-}
+const listingMetadata = buildListingMetadata(pkg, manifest);
 
 async function syncListingMetadata(pluginId) {
-	const shortDescription = listingShortDescription();
-	if (!shortDescription) return;
+	if (Object.keys(listingMetadata).length === 0) return;
 
 	const res = await fetch(new URL(`/api/v1/plugins/${pluginId}`, registryUrl), {
 		method: "PATCH",
@@ -51,14 +50,17 @@ async function syncListingMetadata(pluginId) {
 			"Content-Type": "application/json",
 			...authHeaders,
 		},
-		body: JSON.stringify({ shortDescription }),
+		body: JSON.stringify(toPatchListingPayload(listingMetadata)),
 	});
 
 	if (!res.ok) {
 		const body = await res.json().catch(() => ({}));
 		const message = typeof body === "object" && body && "error" in body ? body.error : res.statusText;
-		console.warn(`Could not update listing short description: ${message}`);
+		console.warn(`Could not update listing metadata: ${message}`);
+		return;
 	}
+
+	console.log(`Updated marketplace listing metadata for ${pluginId}`);
 }
 
 const access = await checkPluginPublishAccess(registryUrl, token, manifest.id);
@@ -82,8 +84,7 @@ if (access === "unauthorized") {
 	process.exit(1);
 }
 
-const description = pkg.description?.trim();
-if (!description) {
+if (!listingMetadata.description) {
 	console.error(`package.json description is required to register ${manifest.id}`);
 	process.exit(1);
 }
@@ -94,13 +95,13 @@ const createRes = await fetch(new URL("/api/v1/plugins", registryUrl), {
 		"Content-Type": "application/json",
 		...authHeaders,
 	},
-	body: JSON.stringify({
-		id: manifest.id,
-		name: manifest.id,
-		description,
-		short_description: listingShortDescription(),
-		capabilities: toMarketplaceCapabilities(manifest.capabilities),
-	}),
+	body: JSON.stringify(
+		toCreateListingPayload(
+			listingMetadata,
+			manifest,
+			toMarketplaceCapabilities(manifest.capabilities),
+		),
+	),
 });
 
 if (createRes.status === 409) {

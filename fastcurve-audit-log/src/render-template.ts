@@ -2,6 +2,7 @@ import {
 	loginNotificationHtml,
 	loginNotificationText,
 } from "./template-content.js";
+import type { SiteBranding } from "./site-branding.js";
 
 const TEMPLATES: Record<string, string> = {
 	"login-notification.html": loginNotificationHtml,
@@ -11,21 +12,9 @@ const TEMPLATES: Record<string, string> = {
 export interface LoginEmailContent {
 	userLabel: string;
 	userEmail: string;
-	actorIpv4: string;
-	actorIpv6: string;
+	actorSourceKey: string;
 	authPath: string;
 	receivedAt: string;
-}
-
-const DEFAULT_SITE_NAME = "Your Site Name";
-const DEFAULT_SITE_SHORT = "Site";
-
-function siteName(): string {
-	return process.env.SITE_NAME?.trim() || DEFAULT_SITE_NAME;
-}
-
-function siteShort(): string {
-	return process.env.SITE_SHORT?.trim() || DEFAULT_SITE_SHORT;
 }
 
 function loadTemplate(name: string): string {
@@ -48,13 +37,15 @@ function escapeAttr(value: string): string {
 	return escapeHtml(value).replaceAll("'", "&#39;");
 }
 
-function buildTemplateVars(content: LoginEmailContent): Record<string, string> {
+function buildTemplateVars(
+	content: LoginEmailContent,
+	branding: SiteBranding,
+): Record<string, string> {
 	const userEmail = content.userEmail.trim() || "—";
-	const name = siteName();
-	const short = siteShort();
+	const short = branding.siteShort;
 
 	return {
-		siteName: escapeHtml(name),
+		siteName: escapeHtml(branding.siteName),
 		siteShort: escapeHtml(short),
 		typeLabel: escapeHtml("Admin login"),
 		headerIntro: escapeHtml(`A user signed in to the ${short} admin panel.`),
@@ -63,8 +54,7 @@ function buildTemplateVars(content: LoginEmailContent): Record<string, string> {
 		userLabel: escapeHtml(content.userLabel),
 		userEmail: escapeHtml(userEmail),
 		userEmailHref: escapeAttr(userEmail === "—" ? "" : userEmail),
-		actorIpv4: escapeHtml(content.actorIpv4),
-		actorIpv6: escapeHtml(content.actorIpv6),
+		actorSourceKey: escapeHtml(content.actorSourceKey),
 		authPath: escapeHtml(content.authPath),
 		receivedAt: escapeHtml(content.receivedAt),
 		footerNote: escapeHtml(
@@ -73,17 +63,27 @@ function buildTemplateVars(content: LoginEmailContent): Record<string, string> {
 	};
 }
 
-export function renderTemplateFile(name: string, content: LoginEmailContent): string {
+export function renderTemplateFile(
+	name: string,
+	content: LoginEmailContent,
+	branding: SiteBranding,
+): string {
 	const template = loadTemplate(name);
-	const vars = buildTemplateVars(content);
+	const vars = buildTemplateVars(content, branding);
 
 	return template.replace(/\{\{(\w+)\}\}/g, (_match, key: string) => vars[key] ?? "");
 }
 
-export function renderLoginNotificationHtml(content: LoginEmailContent): string {
-	return renderTemplateFile("login-notification.html", content);
+export function renderLoginNotificationHtml(
+	content: LoginEmailContent,
+	branding: SiteBranding,
+): string {
+	return renderTemplateFile("login-notification.html", content, branding);
 }
 
-export function renderLoginNotificationText(content: LoginEmailContent): string {
-	return renderTemplateFile("login-notification.txt", content);
+export function renderLoginNotificationText(
+	content: LoginEmailContent,
+	branding: SiteBranding,
+): string {
+	return renderTemplateFile("login-notification.txt", content, branding);
 }

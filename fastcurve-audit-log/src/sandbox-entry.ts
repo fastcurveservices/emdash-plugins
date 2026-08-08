@@ -12,7 +12,9 @@ import {
 	onMediaAfterUpload,
 	onPluginLifecycle,
 } from "./hooks.js";
+import { cacheInstallConfig } from "./install-config.js";
 import { PLUGIN_ID, recordAuthEvent } from "./record.js";
+import { withHookErrorHandling, withRouteErrorHandling } from "./safe-handler.js";
 import type { AuthAuditInput } from "./types.js";
 
 interface BlockInteraction {
@@ -55,64 +57,65 @@ function parseAuthInput(body: unknown): AuthAuditInput | null {
 export default {
 	hooks: {
 		"plugin:install": {
-			handler: async (_event, ctx) => {
+			handler: withHookErrorHandling(async (_event, ctx) => {
+				await cacheInstallConfig(ctx);
 				await onPluginLifecycle(ctx, "install", PLUGIN_ID);
 				ctx.log.info("FastCurve audit log plugin installed");
-			},
+			}),
 		},
 		"plugin:activate": {
-			handler: async (_event, ctx) => {
+			handler: withHookErrorHandling(async (_event, ctx) => {
 				await onPluginLifecycle(ctx, "activate", PLUGIN_ID);
-			},
+			}),
 		},
 		"plugin:deactivate": {
-			handler: async (_event, ctx) => {
+			handler: withHookErrorHandling(async (_event, ctx) => {
 				await onPluginLifecycle(ctx, "deactivate", PLUGIN_ID);
-			},
+			}),
 		},
 		"plugin:uninstall": {
-			handler: async (_event, ctx) => {
+			handler: withHookErrorHandling(async (_event, ctx) => {
 				await onPluginLifecycle(ctx, "uninstall", PLUGIN_ID);
-			},
+			}),
 		},
 		"content:beforeSave": {
-			handler: onContentBeforeSave,
+			handler: withHookErrorHandling(onContentBeforeSave),
 		},
 		"content:afterSave": {
-			handler: onContentAfterSave,
+			handler: withHookErrorHandling(onContentAfterSave),
 		},
 		"content:afterDelete": {
-			handler: onContentAfterDelete,
+			handler: withHookErrorHandling(onContentAfterDelete),
 		},
 		"media:afterUpload": {
-			handler: onMediaAfterUpload,
+			handler: withHookErrorHandling(onMediaAfterUpload),
 		},
 		"comment:afterCreate": {
-			handler: onCommentAfterCreate,
+			handler: withHookErrorHandling(onCommentAfterCreate),
 		},
 		"comment:afterModerate": {
-			handler: onCommentAfterModerate,
+			handler: withHookErrorHandling(onCommentAfterModerate),
 		},
 		"email:afterSend": {
-			handler: onEmailAfterSend,
+			handler: withHookErrorHandling(onEmailAfterSend),
 		},
 	},
 
 	routes: {
 		"record-auth": {
-			handler: async (routeCtx, ctx) => {
-				const input = parseAuthInput(routeCtx.input);
+			handler: withRouteErrorHandling(async (body, ctx) => {
+				const input = parseAuthInput(body);
 				if (!input) {
 					return { success: false, error: "Invalid auth audit payload" };
 				}
 				await recordAuthEvent(ctx, input);
 				return { success: true };
-			},
+			}),
 		},
 
 		admin: {
-			handler: async (routeCtx, ctx) => {
-				const interaction = routeCtx.input as BlockInteraction;
+			handler: withRouteErrorHandling(async (body, ctx) => {
+				const interaction = body as BlockInteraction;
 
 				if (interaction.type === "page_load" && interaction.page === "/login") {
 					return renderLoginPage(ctx);
@@ -141,7 +144,7 @@ export default {
 				}
 
 				return { blocks: [] };
-			},
+			}),
 		},
 	},
 } satisfies SandboxedPlugin;

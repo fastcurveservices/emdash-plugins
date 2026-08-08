@@ -92,4 +92,33 @@ Requires **`EMDASH_MARKETPLACE_TOKEN`** on the repo. Release tags (`<plugin>-v<s
 | ------ | ------------- | ------- |
 | `EMDASH_MARKETPLACE_TOKEN` | `publish_to_registry=true` | CLI auth for `emdash plugin publish` |
 
+## Marketplace listing metadata
+
+Each plugin `package.json` can declare listing fields synced to emdashcms.org on every publish via `scripts/ensure-plugin-registered.mjs`:
+
+| Field | Source |
+| ----- | ------ |
+| Category | `marketplace.category` |
+| Repository URL | `marketplace.repositoryUrl` or `repository.url` |
+| Homepage URL | `marketplace.homepageUrl`, `homepage`, or repo `directory` link |
+| Support URL | `marketplace.supportUrl` |
+| Funding URL | `marketplace.fundingUrl` (optional) |
+| Keywords | `marketplace.keywords` or `keywords` |
+| License | `marketplace.license` or `license` |
+| Short description | `shortDescription` |
+
+Example:
+
+```json
+{
+  "shortDescription": "One-line catalog summary.",
+  "keywords": ["emdash", "analytics"],
+  "marketplace": {
+    "name": "My Plugin",
+    "category": "analytics",
+    "supportUrl": "https://github.com/org/repo/issues"
+  }
+}
+```
+
 MIT — see [LICENSE](./LICENSE).

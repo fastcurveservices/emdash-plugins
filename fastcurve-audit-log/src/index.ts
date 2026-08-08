@@ -3,7 +3,7 @@ import type { PluginDescriptor } from "emdash";
 export function auditLogPlugin(): PluginDescriptor {
 	return {
 		id: "fastcurve-audit-log",
-		version: "1.0.1",
+		version: "1.0.2",
 		format: "standard",
 		entrypoint: "@fastcurve/audit-log/sandbox",
 		options: {},
@@ -13,7 +13,6 @@ export function auditLogPlugin(): PluginDescriptor {
 			"media:read",
 			"users:read",
 			"email:send",
-			"hooks.email-events:register",
 		],
 		storage: {
 			events: {

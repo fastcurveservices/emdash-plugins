@@ -1,5 +1,6 @@
 import type { PluginContext } from "emdash";
 import type { AuditEvent, AuthAuditInput } from "./types.js";
+import { fingerprintAuthSource } from "./ip-fingerprint.js";
 import { getAuditRequestActor } from "./request-actor.js";
 import { notifySuccessfulLogin } from "./login-notify.js";
 
@@ -84,6 +85,7 @@ export async function recordAuthEvent(ctx: PluginContext, input: AuthAuditInput)
 
 	const actorEmail = input.actorEmail ?? resolved.actorEmail;
 	const actorName = input.actorName ?? resolved.actorName;
+	const actorSourceKey = await fingerprintAuthSource(input);
 
 	await recordEvent(ctx, {
 		timestamp: new Date().toISOString(),
@@ -93,12 +95,16 @@ export async function recordAuthEvent(ctx: PluginContext, input: AuthAuditInput)
 		status: input.status,
 		actorId: input.actorId,
 		actorEmail,
-		actorIp: input.actorIp ?? input.actorIpv4 ?? input.actorIpv6,
-		actorIpv4: input.actorIpv4,
-		actorIpv6: input.actorIpv6,
+		actorSourceKey,
 		resourceType: "session",
 		details: { path: input.path, ...(actorName ? { actorName } : {}), ...input.details },
 	});
 
-	await notifySuccessfulLogin(ctx, { ...input, actorEmail, actorName });
+	try {
+		await notifySuccessfulLogin(ctx, { ...input, actorEmail, actorName, actorSourceKey });
+	} catch (error) {
+		ctx.log.error("Login notification failed", {
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
 }

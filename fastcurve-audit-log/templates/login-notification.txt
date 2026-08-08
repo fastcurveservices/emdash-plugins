@@ -4,8 +4,7 @@ Login details
 -------------
 User: {{userLabel}}
 Email: {{userEmail}}
-IPv4: {{actorIpv4}}
-IPv6: {{actorIpv6}}
+Network fingerprint: {{actorSourceKey}}
 Auth path: {{authPath}}
 Time: {{receivedAt}}
 

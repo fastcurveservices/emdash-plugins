@@ -3,6 +3,7 @@ import type { SandboxedPlugin } from "emdash/plugin";
 import { renderHitsPage, renderStatsWidget, renderVisitorsPage } from "./admin.js";
 import { applyPageNav } from "./table-block.js";
 import { recordVisit } from "./record.js";
+import { withRouteErrorHandling } from "./safe-handler.js";
 import type { VisitInput } from "./types.js";
 
 interface BlockInteraction {
@@ -20,7 +21,6 @@ function parseVisitInput(body: unknown): VisitInput | null {
 	return {
 		visitorKey: input.visitorKey,
 		path: input.path,
-		referer: typeof input.referer === "string" ? input.referer : undefined,
 	};
 }
 
@@ -35,20 +35,20 @@ export default {
 
 	routes: {
 		"record-visit": {
-			handler: async (routeCtx, ctx: PluginContext) => {
-				const input = parseVisitInput(routeCtx.input);
+			handler: withRouteErrorHandling(async (body, ctx: PluginContext) => {
+				const input = parseVisitInput(body);
 				if (!input) {
 					return { success: false, error: "Invalid visit payload" };
 				}
 
 				await recordVisit(ctx, input);
 				return { success: true };
-			},
+			}),
 		},
 
 		admin: {
-			handler: async (routeCtx, ctx: PluginContext) => {
-				const interaction = routeCtx.input as BlockInteraction;
+			handler: withRouteErrorHandling(async (body, ctx: PluginContext) => {
+				const interaction = body as BlockInteraction;
 
 				if (interaction.type === "page_load" && interaction.page === "/visitors") {
 					return renderVisitorsPage(ctx);
@@ -77,7 +77,7 @@ export default {
 				}
 
 				return { blocks: [] };
-			},
+			}),
 		},
 	},
 } satisfies SandboxedPlugin;

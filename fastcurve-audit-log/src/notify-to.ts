@@ -1,8 +1,10 @@
-function readEnv(name: string): string | undefined {
-	const value = process.env[name]?.trim();
-	return value || undefined;
-}
+import type { PluginContext } from "emdash";
+import { NOTIFY_TO_KV_KEY } from "./install-config.js";
 
-export function resolveFormNotifyTo(): string | undefined {
-	return readEnv("FORM_NOTIFY_TO") ?? readEnv("SMTP_TO");
+export async function resolveFormNotifyTo(ctx: PluginContext): Promise<string | undefined> {
+	const cached = await ctx.kv.get(NOTIFY_TO_KV_KEY);
+	if (typeof cached === "string" && cached.trim()) {
+		return cached.trim();
+	}
+	return undefined;
 }

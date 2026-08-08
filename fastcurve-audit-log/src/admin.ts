@@ -1,6 +1,6 @@
 import type { PluginContext } from "emdash";
 import type { AuditEvent } from "./types.js";
-import { formatAuditEventIp } from "./format-ip.js";
+import { formatSourceKey } from "./ip-fingerprint.js";
 import {
 	buildTable,
 	buildTablePagination,
@@ -16,7 +16,7 @@ interface TableRow {
 	action: string;
 	summary: string;
 	actor: string;
-	ip: string;
+	source: string;
 	resource: string;
 	time: string;
 	status: string;
@@ -71,7 +71,7 @@ async function toTableRow(ctx: PluginContext, event: AuditEvent): Promise<TableR
 		action: event.action,
 		summary: event.summary,
 		actor,
-		ip: formatAuditEventIp(event),
+		source: formatSourceKey(event.actorSourceKey),
 		resource,
 		time: event.timestamp,
 		status: event.status ?? "success",
@@ -149,7 +149,7 @@ async function buildTableBlocks(
 					{ key: "action", label: "Action", format: "badge" },
 					{ key: "summary", label: "Summary", format: "text" },
 					{ key: "actor", label: "User", format: "text" },
-					{ key: "ip", label: "IP", format: "code" },
+					{ key: "source", label: "Source", format: "code" },
 					{ key: "resource", label: "Resource", format: "code" },
 					{ key: "status", label: "Status", format: "badge" },
 					{ key: "time", label: "Time", format: "relative_time" },
@@ -187,7 +187,7 @@ export async function renderLoginPage(ctx: PluginContext, pageState?: TablePageS
 	return buildTableBlocks(
 		ctx,
 		"Login Activity",
-		"Successful logins, failed attempts, and logouts. 10 rows per page.",
+		"Successful logins, failed attempts, and logouts. Network source fingerprints are hashed; raw IPs are not stored.",
 		events,
 		{
 			pageActionId: "login-table-page",

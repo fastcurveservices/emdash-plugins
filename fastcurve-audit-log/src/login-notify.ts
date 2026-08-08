@@ -5,7 +5,8 @@ import {
 	renderLoginNotificationText,
 	type LoginEmailContent,
 } from "./render-template.js";
-import { auditEventIpFields } from "./format-ip.js";
+import { brandingFromContext } from "./site-branding.js";
+import { formatSourceKey } from "./ip-fingerprint.js";
 import { PLUGIN_ID } from "./record.js";
 import type { AuthAuditInput } from "./types.js";
 
@@ -22,40 +23,39 @@ function userLabel(input: AuthAuditInput & { actorEmail?: string; actorName?: st
 }
 
 function toEmailContent(
-	input: AuthAuditInput & { actorEmail?: string; actorName?: string },
+	input: AuthAuditInput & { actorEmail?: string; actorName?: string; actorSourceKey?: string },
 ): LoginEmailContent {
-	const { actorIpv4, actorIpv6 } = auditEventIpFields(input);
-
 	return {
 		userLabel: userLabel(input),
 		userEmail: input.actorEmail ?? "—",
-		actorIpv4,
-		actorIpv6,
+		actorSourceKey: formatSourceKey(input.actorSourceKey),
 		authPath: input.path,
 		receivedAt: `${formatTime()} (IST)`,
 	};
 }
 
-export function buildLoginNotificationEmail(
-	input: AuthAuditInput & { actorEmail?: string; actorName?: string },
-): EmailMessage | null {
-	const notifyTo = resolveFormNotifyTo();
+export async function buildLoginNotificationEmail(
+	ctx: PluginContext,
+	input: AuthAuditInput & { actorEmail?: string; actorName?: string; actorSourceKey?: string },
+): Promise<EmailMessage | null> {
+	const notifyTo = await resolveFormNotifyTo(ctx);
 	if (!notifyTo) return null;
 
 	const content = toEmailContent(input);
 	const label = userLabel(input);
+	const branding = brandingFromContext(ctx);
 
 	return {
 		to: notifyTo,
 		subject: `[Site Admin] Login: ${label}`,
-		text: renderLoginNotificationText(content),
-		html: renderLoginNotificationHtml(content),
+		text: renderLoginNotificationText(content, branding),
+		html: renderLoginNotificationHtml(content, branding),
 	};
 }
 
 export async function notifySuccessfulLogin(
 	ctx: PluginContext,
-	input: AuthAuditInput & { actorEmail?: string; actorName?: string },
+	input: AuthAuditInput & { actorEmail?: string; actorName?: string; actorSourceKey?: string },
 ): Promise<void> {
 	if (input.action !== "login" || input.status !== "success") return;
 
@@ -64,9 +64,9 @@ export async function notifySuccessfulLogin(
 		return;
 	}
 
-	const email = buildLoginNotificationEmail(input);
+	const email = await buildLoginNotificationEmail(ctx, input);
 	if (!email) {
-		ctx.log.warn("FORM_NOTIFY_TO is not set; login notification skipped");
+		ctx.log.warn("Login notify recipient is not configured; notification skipped");
 		return;
 	}
 

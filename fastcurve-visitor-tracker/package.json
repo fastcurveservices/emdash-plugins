@@ -1,9 +1,23 @@
 {
 	"name": "@fastcurve/visitor-tracker",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "EmDash plugin: anonymous visitor and page-view tracking with admin dashboards.",
 	"shortDescription": "Privacy-minimal visitor and page-view stats using hashed visitor keys only.",
 	"license": "MIT",
+	"keywords": [
+		"emdash",
+		"analytics",
+		"visitors",
+		"pageviews",
+		"privacy",
+		"tracking",
+		"fastcurve"
+	],
+	"marketplace": {
+		"name": "FastCurve Visitor Tracker",
+		"category": "analytics",
+		"supportUrl": "https://github.com/fastcurveservices/emdash-plugins/issues"
+	},
 	"author": "FastCurve Services",
 	"repository": {
 		"type": "git",

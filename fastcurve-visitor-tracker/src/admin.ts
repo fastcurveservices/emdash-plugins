@@ -21,7 +21,6 @@ interface VisitorRow {
 interface HitRow {
 	path: string;
 	visitor: string;
-	referer: string;
 	time: string;
 }
 
@@ -63,7 +62,6 @@ function toHitRow(hit: VisitHit): HitRow {
 	return {
 		path: hit.path,
 		visitor: shortKey(hit.visitorKey),
-		referer: hit.referer?.trim() || "—",
 		time: hit.timestamp,
 	};
 }
@@ -192,7 +190,7 @@ export async function renderHitsPage(ctx: PluginContext, pageState?: TablePageSt
 			{ type: "header" as const, text: "Page Views" },
 			{
 				type: "context" as const,
-				text: "Individual public page requests with path and timestamp. 10 rows per page.",
+				text: "Individual public page requests with path and timestamp only. No IP, User-Agent, or referer data is stored.",
 			},
 			{ type: "divider" as const },
 			buildTable({
@@ -201,7 +199,6 @@ export async function renderHitsPage(ctx: PluginContext, pageState?: TablePageSt
 				columns: [
 					{ key: "path", label: "Path", format: "code" },
 					{ key: "visitor", label: "Visitor", format: "code" },
-					{ key: "referer", label: "Referer", format: "text" },
 					{ key: "time", label: "Time", format: "relative_time" },
 				],
 				rows,
