@@ -1,0 +1,65 @@
+{
+  "id": "fastcurve-audit-log",
+  "version": "1.0.1",
+  "capabilities": [
+    "read:content",
+    "write:content",
+    "read:media",
+    "read:users",
+    "email:send"
+  ],
+  "allowedHosts": [],
+  "hooks": [
+    "plugin:install",
+    "plugin:activate",
+    "plugin:deactivate",
+    "plugin:uninstall",
+    "content:beforeSave",
+    "content:afterSave",
+    "content:afterDelete",
+    "media:afterUpload",
+    "comment:afterCreate",
+    "comment:afterModerate",
+    "email:afterSend"
+  ],
+  "routes": [
+    "record-auth",
+    "admin"
+  ],
+  "storage": {
+    "events": {
+      "indexes": [
+        "timestamp",
+        "category",
+        "action",
+        "actorId",
+        "status",
+        [
+          "category",
+          "timestamp"
+        ]
+      ]
+    }
+  },
+  "admin": {
+    "pages": [
+      {
+        "path": "/login",
+        "label": "Login Activity",
+        "icon": "shield"
+      },
+      {
+        "path": "/actions",
+        "label": "Action Audit",
+        "icon": "history"
+      }
+    ],
+    "widgets": [
+      {
+        "id": "recent-audit",
+        "title": "Recent Audit",
+        "size": "half"
+      }
+    ]
+  }
+}

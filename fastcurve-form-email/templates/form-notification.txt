@@ -1,0 +1,14 @@
+{{typeLabel}} form submission — {{siteName}}
+
+Submission details
+------------------
+Type: {{typeLabel}}
+Locale: {{locale}}
+Name: {{senderName}}
+Email: {{senderEmail}}
+Subject: {{subjectLine}}
+Received: {{receivedAt}}
+
+Message
+-------
+{{message}}

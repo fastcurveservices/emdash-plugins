@@ -1,0 +1,15 @@
+{
+  "id": "fastcurve-form-email",
+  "version": "1.0.1",
+  "capabilities": [
+    "read:content",
+    "email:send"
+  ],
+  "allowedHosts": [],
+  "hooks": [
+    "content:afterSave"
+  ],
+  "routes": [],
+  "storage": {},
+  "admin": {}
+}

@@ -1,0 +1,21 @@
+{
+	"name": "fastcurve-emdash-plugins",
+	"private": true,
+	"pluginVersion": "1.0.1",
+	"description": "FastCurve EmDash CMS plugins for emdashcms.org",
+	"license": "MIT",
+	"workspaces": [
+		"fastcurve-form-email",
+		"fastcurve-audit-log",
+		"fastcurve-visitor-tracker"
+	],
+	"scripts": {
+		"validate": "npm run validate --workspaces --if-present",
+		"bundle": "npm run bundle --workspaces --if-present",
+		"login": "emdash plugin login --registry https://emdashcms.org"
+	},
+	"devDependencies": {
+		"emdash": "^0.32.0",
+		"tsdown": "^0.18.0"
+	}
+}

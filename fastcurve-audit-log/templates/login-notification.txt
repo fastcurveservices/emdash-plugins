@@ -1,0 +1,12 @@
+Admin login — {{siteName}}
+
+Login details
+-------------
+User: {{userLabel}}
+Email: {{userEmail}}
+IPv4: {{actorIpv4}}
+IPv6: {{actorIpv6}}
+Auth path: {{authPath}}
+Time: {{receivedAt}}
+
+{{footerNote}}

@@ -1,0 +1,58 @@
+{
+  "id": "fastcurve-visitor-tracker",
+  "version": "1.0.1",
+  "capabilities": [],
+  "allowedHosts": [],
+  "hooks": [
+    "plugin:install"
+  ],
+  "routes": [
+    "record-visit",
+    "admin"
+  ],
+  "storage": {
+    "visitors": {
+      "indexes": [
+        "firstSeen",
+        "lastSeen",
+        "visitCount",
+        [
+          "lastSeen",
+          "visitCount"
+        ]
+      ]
+    },
+    "hits": {
+      "indexes": [
+        "timestamp",
+        "visitorKey",
+        "path",
+        [
+          "timestamp",
+          "visitorKey"
+        ]
+      ]
+    }
+  },
+  "admin": {
+    "pages": [
+      {
+        "path": "/visitors",
+        "label": "Visitors",
+        "icon": "users"
+      },
+      {
+        "path": "/hits",
+        "label": "Page Views",
+        "icon": "activity"
+      }
+    ],
+    "widgets": [
+      {
+        "id": "visitor-stats",
+        "title": "Visitor Stats",
+        "size": "half"
+      }
+    ]
+  }
+}

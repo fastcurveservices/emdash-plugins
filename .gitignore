@@ -1,0 +1,6 @@
+dist/
+.emdash-bundle-tmp/
+node_modules/
+*.tgz
+.DS_Store
+src/template-content.ts

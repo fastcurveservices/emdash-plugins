@@ -1,0 +1,142 @@
+<!--
+  Form notification email template (@fastcurve/form-email)
+
+  Edit layout and styles here. Dynamic values use {{placeholders}}:
+  siteName, siteShort, typeLabel, headerIntro, badgeColor, badgeBg,
+  locale, senderName, senderEmail, senderEmailHref, subjectLine,
+  receivedAt, message, messageAccentColor, footerNote
+
+  Placeholders are HTML-escaped when rendered (except badgeColor, badgeBg,
+  messageAccentColor which are safe colour tokens set by the plugin).
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>{{typeLabel}} form submission</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f7f5;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f7f5;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:620px;background:#ffffff;border:1px solid #d8e3dc;border-radius:12px;overflow:hidden;">
+          <tr>
+            <td style="background:linear-gradient(135deg, #1f6b3a 0%, #16542d 100%);padding:24px 28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="font:700 20px/1.3 Georgia,'Times New Roman',serif;color:#ffffff;">
+                    {{siteName}}
+                  </td>
+                  <td align="right" style="vertical-align:top;">
+                    <span style="display:inline-block;padding:6px 12px;border-radius:999px;background:{{badgeBg}};color:{{badgeColor}};font:700 11px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;letter-spacing:0.04em;text-transform:uppercase;">
+                      {{typeLabel}}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="2" style="padding-top:10px;font:400 14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:rgba(255,255,255,0.92);">
+                    {{headerIntro}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:24px 28px 8px;font:700 15px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a2e24;">
+              Submission details
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 28px 24px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #d8e3dc;border-radius:10px;overflow:hidden;">
+                <tr>
+                  <td style="padding:12px 16px;border-bottom:1px solid #d8e3dc;width:34%;vertical-align:top;font:600 13px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#5c6b62;">
+                    Submission type
+                  </td>
+                  <td style="padding:12px 16px;border-bottom:1px solid #d8e3dc;vertical-align:top;font:400 14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a2e24;">
+                    {{typeLabel}}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;border-bottom:1px solid #d8e3dc;width:34%;vertical-align:top;font:600 13px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#5c6b62;">
+                    Form locale
+                  </td>
+                  <td style="padding:12px 16px;border-bottom:1px solid #d8e3dc;vertical-align:top;font:400 14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a2e24;">
+                    {{locale}}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;border-bottom:1px solid #d8e3dc;width:34%;vertical-align:top;font:600 13px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#5c6b62;">
+                    Full name
+                  </td>
+                  <td style="padding:12px 16px;border-bottom:1px solid #d8e3dc;vertical-align:top;font:400 14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a2e24;">
+                    {{senderName}}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;border-bottom:1px solid #d8e3dc;width:34%;vertical-align:top;font:600 13px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#5c6b62;">
+                    Email address
+                  </td>
+                  <td style="padding:12px 16px;border-bottom:1px solid #d8e3dc;vertical-align:top;font:400 14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a2e24;">
+                    <a href="mailto:{{senderEmailHref}}" style="color:#1f4d8f;text-decoration:none;">{{senderEmail}}</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;border-bottom:1px solid #d8e3dc;width:34%;vertical-align:top;font:600 13px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#5c6b62;">
+                    Subject
+                  </td>
+                  <td style="padding:12px 16px;border-bottom:1px solid #d8e3dc;vertical-align:top;font:400 14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a2e24;">
+                    {{subjectLine}}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;width:34%;vertical-align:top;font:600 13px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#5c6b62;">
+                    Received at
+                  </td>
+                  <td style="padding:12px 16px;vertical-align:top;font:400 14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a2e24;">
+                    {{receivedAt}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 28px 8px;font:700 15px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1a2e24;">
+              Message
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 28px 28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f7f5;border:1px solid #d8e3dc;border-left:4px solid {{messageAccentColor}};border-radius:10px;">
+                <tr>
+                  <td style="padding:18px 20px;font:400 15px/1.65 Georgia,'Times New Roman',serif;color:#1a2e24;white-space:pre-wrap;word-break:break-word;">
+                    {{message}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:18px 28px 24px;border-top:1px solid #d8e3dc;background:#f4f7f5;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="font:400 12px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#5c6b62;">
+                    {{footerNote}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

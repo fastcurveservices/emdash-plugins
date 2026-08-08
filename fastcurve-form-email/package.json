@@ -1,0 +1,45 @@
+{
+	"name": "@fastcurve/form-email",
+	"version": "1.0.1",
+	"description": "EmDash plugin: email notifications for contact form submissions via the site email pipeline.",
+	"license": "MIT",
+	"author": "FastCurve Services",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/fastcurveservices/emdash-plugins.git",
+		"directory": "fastcurve-form-email"
+	},
+	"type": "module",
+	"files": [
+		"dist",
+		"manifest.json",
+		"README.md",
+		"templates"
+	],
+	"scripts": {
+		"prebuild": "node ../scripts/embed-templates.mjs .",
+		"build": "tsdown src/index.ts src/sandbox-entry.ts --format esm --out-dir dist --clean",
+		"prebundle": "npm run build",
+		"bundle": "emdash plugin bundle",
+		"postbundle": "node ../scripts/patch-tarball-manifest.mjs .",
+		"manifest:sync": "node ../scripts/patch-tarball-manifest.mjs .",
+		"validate": "npm run build && emdash plugin bundle --validate-only",
+		"login": "emdash plugin login --registry https://emdashcms.org",
+		"publish:marketplace": "node ../scripts/publish-marketplace.mjs ."
+	},
+	"exports": {
+		".": {
+			"import": "./dist/index.mjs"
+		},
+		"./sandbox": {
+			"import": "./dist/sandbox-entry.mjs"
+		}
+	},
+	"peerDependencies": {
+		"emdash": ">=0.32.0"
+	},
+	"devDependencies": {
+		"emdash": "^0.32.0",
+		"tsdown": "^0.18.0"
+	}
+}

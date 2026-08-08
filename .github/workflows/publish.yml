@@ -1,0 +1,228 @@
+name: Publish EmDash Plugins
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      plugin:
+        description: Plugin directory name (all = every plugin in parallel)
+        required: true
+        type: choice
+        options:
+          - all
+          - fastcurve-form-email
+          - fastcurve-audit-log
+          - fastcurve-visitor-tracker
+      version:
+        description: Semver for all plugins (defaults to pluginVersion in package.json)
+        required: false
+        default: ""
+      publish_to_registry:
+        description: Upload to emdashcms.org
+        required: false
+        type: boolean
+        default: false
+      bump_version_after_publish:
+        description: After success, bump pluginVersion for all plugins and commit
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+env:
+  EMDASH_REGISTRY: https://emdashcms.org
+
+jobs:
+  prepare:
+    if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]')
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      plugins: ${{ steps.meta.outputs.plugins }}
+      publish: ${{ steps.meta.outputs.publish }}
+      bump: ${{ steps.meta.outputs.bump }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve plugins, version, and flags
+        id: meta
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_PLUGIN: ${{ github.event.inputs.plugin }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${RELEASE_TAG:-}" ]; then
+            if [[ "$RELEASE_TAG" =~ ^(.+)-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+              echo "plugins=[\"${BASH_REMATCH[1]}\"]" >> "$GITHUB_OUTPUT"
+              node -e "
+                const fs = require('fs');
+                const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+                pkg.pluginVersion = '${BASH_REMATCH[2]}';
+                fs.writeFileSync('package.json', JSON.stringify(pkg, null, '\t') + '\n');
+              "
+              echo "version=${BASH_REMATCH[2]}" >> "$GITHUB_OUTPUT"
+            else
+              echo "Release tag must match <plugin-dir>-v<semver>, e.g. fastcurve-form-email-v1.0.0" >&2
+              exit 1
+            fi
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "bump=false" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            echo 'plugins=["fastcurve-form-email","fastcurve-audit-log","fastcurve-visitor-tracker"]' >> "$GITHUB_OUTPUT"
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "bump=true" >> "$GITHUB_OUTPUT"
+          else
+            PLUGIN="${INPUT_PLUGIN:-all}"
+            if [ "$PLUGIN" = "all" ]; then
+              echo 'plugins=["fastcurve-form-email","fastcurve-audit-log","fastcurve-visitor-tracker"]' >> "$GITHUB_OUTPUT"
+            else
+              echo "plugins=[\"${PLUGIN}\"]" >> "$GITHUB_OUTPUT"
+            fi
+            echo "publish=${{ inputs.publish_to_registry }}" >> "$GITHUB_OUTPUT"
+            echo "bump=${{ inputs.bump_version_after_publish }}" >> "$GITHUB_OUTPUT"
+            if [ -n "${INPUT_VERSION:-}" ]; then
+              node -e "
+                const fs = require('fs');
+                const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+                pkg.pluginVersion = '${INPUT_VERSION}';
+                fs.writeFileSync('package.json', JSON.stringify(pkg, null, '\t') + '\n');
+              "
+            fi
+          fi
+
+          node scripts/sync-plugin-versions.mjs
+          echo "version=$(node -p "require('./package.json').pluginVersion")" >> "$GITHUB_OUTPUT"
+
+      - name: Upload synced workspace
+        uses: actions/upload-artifact@v7
+        with:
+          name: plugin-workspace
+          path: |
+            package.json
+            package-lock.json
+            scripts
+            fastcurve-form-email
+            fastcurve-audit-log
+            fastcurve-visitor-tracker
+
+  bundle-and-publish:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: ${{ fromJson(needs.prepare.outputs.plugins) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Download synced workspace
+        uses: actions/download-artifact@v8
+        with:
+          name: plugin-workspace
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate and bundle
+        run: |
+          cd "${{ matrix.plugin }}"
+          npm run validate
+          npm run bundle
+
+      - name: Verify tarball contains root manifest.json
+        run: |
+          tarball="${{ matrix.plugin }}/dist/${{ matrix.plugin }}-${{ needs.prepare.outputs.version }}.tar.gz"
+          if ! tar -tzf "$tarball" | grep -qx manifest.json; then
+            echo "Tarball must contain manifest.json at archive root (not ./manifest.json)" >&2
+            tar -tzf "$tarball"
+            exit 1
+          fi
+
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.plugin }}-${{ needs.prepare.outputs.version }}
+          path: ${{ matrix.plugin }}/dist/*.tar.gz
+
+      - name: Attach bundle to GitHub Release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          asset="${{ matrix.plugin }}/dist/${{ matrix.plugin }}-${{ needs.prepare.outputs.version }}.tar.gz"
+          gh release upload "${{ github.event.release.tag_name }}" "$asset" --clobber
+
+      - name: Prepare marketplace auth
+        if: needs.prepare.outputs.publish == 'true'
+        env:
+          EMDASH_MARKETPLACE_TOKEN: ${{ secrets.EMDASH_MARKETPLACE_TOKEN }}
+        run: node scripts/prepare-marketplace-auth.mjs
+
+      - name: Publish to emdashcms.org
+        id: publish
+        if: needs.prepare.outputs.publish == 'true'
+        env:
+          EMDASH_REGISTRY: https://emdashcms.org
+          EMDASH_MARKETPLACE_TOKEN: ${{ secrets.EMDASH_MARKETPLACE_TOKEN }}
+        run: |
+          if [ -z "${EMDASH_MARKETPLACE_TOKEN:-}" ]; then
+            echo "EMDASH_MARKETPLACE_TOKEN is not set; skipping marketplace upload." >&2
+            exit 1
+          fi
+          if [ ! -f "$HOME/.config/emdash/auth.json" ]; then
+            echo "Marketplace auth was not prepared." >&2
+            exit 1
+          fi
+          tarball="${{ matrix.plugin }}/dist/${{ matrix.plugin }}-${{ needs.prepare.outputs.version }}.tar.gz"
+          node scripts/publish-marketplace.mjs "${{ matrix.plugin }}" "$tarball"
+
+  bump-all:
+    needs: [prepare, bundle-and-publish]
+    if: >-
+      needs.prepare.outputs.bump == 'true' &&
+      needs.prepare.result == 'success' &&
+      needs.bundle-and-publish.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Bump unified plugin version
+        id: bump
+        run: |
+          node scripts/bump-all-versions.mjs patch
+          echo "next=$(node -p "require('./package.json').pluginVersion")" >> "$GITHUB_OUTPUT"
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json fastcurve-*/package.json fastcurve-*/src/index.ts fastcurve-*/manifest.json
+          git commit -m "chore(plugins): bump to v${{ steps.bump.outputs.next }} after publish [skip ci]"
+          git push
