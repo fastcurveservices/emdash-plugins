@@ -1,6 +1,6 @@
 {
 	"name": "@fastcurve/audit-log",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "EmDash plugin: login activity and admin action audit log with optional login email alerts.",
 	"shortDescription": "Admin audit trail with hashed login source fingerprints; reads users only to label actors.",
 	"license": "MIT",

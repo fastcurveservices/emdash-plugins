@@ -1,7 +1,7 @@
 {
 	"name": "fastcurve-emdash-plugins",
 	"private": true,
-	"pluginVersion": "1.0.2",
+	"pluginVersion": "1.0.3",
 	"description": "FastCurve EmDash CMS plugins for emdashcms.org",
 	"license": "MIT",
 	"workspaces": [

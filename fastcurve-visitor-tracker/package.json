@@ -1,6 +1,6 @@
 {
 	"name": "@fastcurve/visitor-tracker",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "EmDash plugin: anonymous visitor and page-view tracking with admin dashboards.",
 	"shortDescription": "Privacy-minimal visitor and page-view stats using hashed visitor keys only.",
 	"license": "MIT",

@@ -3,7 +3,7 @@ import type { PluginDescriptor } from "emdash";
 export function visitorTrackerPlugin(): PluginDescriptor {
 	return {
 		id: "fastcurve-visitor-tracker",
-		version: "1.0.2",
+		version: "1.0.3",
 		format: "standard",
 		entrypoint: "@fastcurve/visitor-tracker/sandbox",
 		options: {},

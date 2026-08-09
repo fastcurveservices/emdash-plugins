@@ -1,6 +1,6 @@
 {
 	"name": "@fastcurve/form-email",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "EmDash plugin: email notifications for contact form submissions via the site email pipeline.",
 	"shortDescription": "Email notifications for contact form submissions via the site email pipeline.",
 	"license": "MIT",
